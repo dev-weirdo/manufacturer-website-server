@@ -96,14 +96,27 @@ const run = async () => {
             const users = await cursor.toArray();
             res.send(users);
         })
-        app.put('/users/admin/:email', async (req, res) => {
+        app.put('/users/admin/:email', verifyJWT, async (req, res) => {
             const email = req.params.email;
-            const filter = { email: email };
-            const updateDoc = {
-                $set: { role: 'admin' }
-            };
-            const result = await usersCollection.updateOne(filter, updateDoc);
-            res.send(result);
+            const reqEmail = req.decoded.email;
+            const reqEmailUser = await usersCollection.findOne({ email: reqEmail });
+            if (reqEmailUser.role === 'admin') {
+                const filter = { email: email };
+                const updateDoc = {
+                    $set: { role: 'admin' }
+                };
+                const result = await usersCollection.updateOne(filter, updateDoc);
+                res.send(result);
+            }
+            else {
+                res.status(403).send({ message: 'forbidden' });
+            }
+        })
+        app.get('/admin/:email', verifyJWT, async (req, res) => {
+            const email = req.params.email;
+            const user = await usersCollection.findOne({ email: email });
+            const isAdmin = user.role === 'admin';
+            res.send({ admin: isAdmin });
         })
         app.put('/users/:email', async (req, res) => {
             const email = req.params.email;
@@ -114,9 +127,7 @@ const run = async () => {
             const filter = { email: email };
             const options = { upsert: true }
             const updateDoc = {
-                $set: {
-                    user
-                },
+                $set: user,
             };
             const result = await usersCollection.updateOne(filter, updateDoc, options);
             res.send({ result, accessToken });
