@@ -1,7 +1,7 @@
 # ElecTools
 This a manufacturer website for electrical tools. You can get all type of needed tools from here.
 
-[Live Link](https://warehouse-management-c6755.web.app/)
+[Live Link](https://electools-45162.web.app)
 
 ## Features and functionality
 
