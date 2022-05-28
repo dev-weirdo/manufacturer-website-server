@@ -50,7 +50,23 @@ const run = async () => {
             const tools = await cursor.toArray();
             res.send(tools);
         })
-        app.post('/tools', async (req, res) => {
+        app.get('/profile', verifyJWT, async (req, res) => {
+            const email = req.query.email;
+            const query = { email: email };
+            const cursor = await usersCollection.findOne(query);
+            res.send(cursor);
+        })
+        app.put('/profile/:email', verifyJWT, async (req, res) => {
+            const email = req.params.email;
+            info = req.body;
+            const query = { email: email };
+            const updateDoc = {
+                $set: info
+            };
+            const result = await usersCollection.updateOne(query, updateDoc);
+            res.send(result)
+        })
+        app.put('/tools', async (req, res) => {
             const product = req.body;
             const result = await toolsCollection.insertOne(product);
             res.send(result);
@@ -81,6 +97,27 @@ const run = async () => {
             const cursor = ordersCollection.find(query);
             const tools = await cursor.toArray();
             res.send(tools);
+        })
+        app.get('/allorders', verifyJWT, async (req, res) => {
+            const query = {};
+            const cursor = ordersCollection.find(query);
+            const result = await cursor.toArray();
+            res.send(result);
+        })
+        app.delete('/allorders/:id', verifyJWT, async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await ordersCollection.deleteOne(query);
+            res.send(result);
+        })
+        app.put('/allorders/:id', verifyJWT, async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) };
+            const updateDoc = {
+                $set: { status: 'shipped' },
+            };
+            const result = await ordersCollection.updateOne(filter, updateDoc);
+            res.send(result);
         })
 
         app.get('/orders/:id', verifyJWT, async (req, res) => {
@@ -118,14 +155,14 @@ const run = async () => {
             res.send({ clientSecret: paymentIntent.client_secret })
         })
 
-        app.delete('/orders/:id', async (req, res) => {
+        app.delete('/orders/:id', verifyJWT, async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
             const result = await ordersCollection.deleteOne(query);
             res.send(result);
         })
 
-        app.post('/reviews', async (req, res) => {
+        app.post('/reviews', verifyJWT, async (req, res) => {
             const review = req.body;
             const result = await reviewsCollection.insertOne(review);
             res.send(result);
@@ -179,6 +216,8 @@ const run = async () => {
             const result = await usersCollection.updateOne(filter, updateDoc, options);
             res.send({ result, accessToken });
         })
+
+
     }
     finally { }
 }
